@@ -108,7 +108,7 @@ const DeckViewer3D = ({ deckParams }) => {
             renderer.domElement.removeEventListener('mousemove', handleMouseMove);
             renderer.domElement.removeEventListener('mouseup', handleMouseUp);
             renderer.domElement.removeEventListener('wheel', handleWheel);
-            if (mountRef.current && renderer.domElement) {
+            if (mountRef.current && renderer.domElement && mountRef.current.contains(renderer.domElement)) {
                 mountRef.current.removeChild(renderer.domElement);
             }
             renderer.dispose();
@@ -118,9 +118,9 @@ const DeckViewer3D = ({ deckParams }) => {
     useEffect(() => {
         if (!deckGroupRef.current || !deckParams) return;
 
-        // Clear existing deck
-        while (deckGroupRef.current.children.length > 0) {
-            deckGroupRef.current.remove(deckGroupRef.current.children[0]);
+        // Clear existing deck - iterate backwards for efficiency
+        for (let i = deckGroupRef.current.children.length - 1; i >= 0; i--) {
+            deckGroupRef.current.remove(deckGroupRef.current.children[i]);
         }
 
         const { width, length, height, boardSpacing, boardThickness, color } = deckParams;

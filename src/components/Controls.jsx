@@ -59,7 +59,7 @@ const Controls = ({ deckParams, setDeckParams }) => {
 
                 <div className="control-group">
                     <label htmlFor="boardSpacing">
-                        Board Spacing: {deckParams.boardSpacing}in
+                        Board Spacing: {(deckParams.boardSpacing * 12).toFixed(2)}"
                     </label>
                     <input
                         type="range"
@@ -74,7 +74,7 @@ const Controls = ({ deckParams, setDeckParams }) => {
 
                 <div className="control-group">
                     <label htmlFor="boardThickness">
-                        Board Thickness: {deckParams.boardThickness}in
+                        Board Thickness: {(deckParams.boardThickness * 12).toFixed(2)}"
                     </label>
                     <input
                         type="range"
