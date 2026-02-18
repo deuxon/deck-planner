@@ -1,41 +1,109 @@
-.light-theme {
-    --background-color: white;
-    --text-color: black;
+.app.light {
+    --background-color: #f5f5f5;
+    --text-color: #333;
+    --card-bg: white;
+    --border-color: #e0e0e0;
 }
 
-.dark-theme {
-    --background-color: black;
-    --text-color: white;
+.app.dark {
+    --background-color: #1a1a1a;
+    --text-color: #f5f5f5;
+    --card-bg: #2a2a2a;
+    --border-color: #444;
 }
 
-body {
+.app {
+    min-height: 100vh;
     background-color: var(--background-color);
     color: var(--text-color);
-    margin: 0;
-    font-family: Arial, sans-serif;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
+    transition: all 0.3s ease;
     padding: 20px;
 }
 
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto 30px;
+    padding: 20px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.theme-toggle {
+    background: none;
+    border: 2px solid var(--border-color);
+    font-size: 1.5rem;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+    border-color: #667eea;
+}
+
+.viewers-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto 30px;
+}
+
+.viewer-section {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.viewer-section h2 {
+    margin: 0 0 15px 0;
+    font-size: 1.3rem;
+    color: var(--text-color);
+}
+
+.cost-calculator {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.cost-calculator h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
 @media (max-width: 768px) {
-    .container {
+    .app {
         padding: 10px;
     }
-}
-
-.button {
-    background-color: var(--text-color);
-    color: var(--background-color);
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.button:hover {
-    opacity: 0.8;
+    
+    header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .viewers-container {
+        grid-template-columns: 1fr;
+    }
 }

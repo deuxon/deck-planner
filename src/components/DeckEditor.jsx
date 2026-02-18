@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import './DeckEditor.css';
 
-const DeckEditor = ({ deckData }) => {
+const DeckEditor = ({ deckParams }) => {
     const canvasRef = useRef(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!canvas || !deckParams) return;
 
         const ctx = canvas.getContext('2d');
         const rect = canvas.getBoundingClientRect();
@@ -17,9 +17,9 @@ const DeckEditor = ({ deckData }) => {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         drawGrid(ctx, canvas.width, canvas.height);
-        drawDeckPlan(ctx, canvas.width, canvas.height, deckData);
-        drawDimensions(ctx, canvas.width, canvas.height, deckData);
-    }, [deckData]);
+        drawDeckPlan(ctx, canvas.width, canvas.height, deckParams);
+        drawDimensions(ctx, canvas.width, canvas.height, deckParams);
+    }, [deckParams]);
 
     const drawGrid = (ctx, width, height) => {
         ctx.strokeStyle = '#e0e0e0';
