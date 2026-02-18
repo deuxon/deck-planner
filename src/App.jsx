@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import DeckEditor from './DeckEditor';
-import DeckViewer3D from './DeckViewer3D';
-import Controls from './Controls';
+import DeckEditor from './components/DeckEditor';
+import DeckViewer3D from './components/DeckViewer3D';
+import Controls from './components/Controls';
+import './App.css';
 
 const App = () => {
-    const [deckParams, setDeckParams] = useState({});
+    const [deckParams, setDeckParams] = useState({
+        width: 10,
+        length: 12,
+        height: 3,
+        boardSpacing: 0.25,
+        boardThickness: 0.5,
+        material: 'wood',
+        color: '#8B4513'
+    });
     const [theme, setTheme] = useState('light');
     const [savedDesigns, setSavedDesigns] = useState([]);
 
@@ -31,11 +40,28 @@ const App = () => {
 
     return (
         <div className={`app ${theme}`}> 
-            <Controls toggleTheme={toggleTheme} />
-            <DeckEditor deckParams={deckParams} setDeckParams={setDeckParams} />
-            <DeckViewer3D deckParams={deckParams} />
+            <header>
+                <h1>Deck Planner</h1>
+                <button className="theme-toggle" onClick={toggleTheme}>
+                    {theme === 'light' ? '🌙' : '☀️'}
+                </button>
+            </header>
+            <Controls 
+                deckParams={deckParams} 
+                setDeckParams={setDeckParams} 
+            />
+            <div className="viewers-container">
+                <div className="viewer-section">
+                    <h2>2D Plan View</h2>
+                    <DeckEditor deckParams={deckParams} />
+                </div>
+                <div className="viewer-section">
+                    <h2>3D View</h2>
+                    <DeckViewer3D deckParams={deckParams} />
+                </div>
+            </div>
             <div className="cost-calculator">
-                <h2>Total Cost: ${calculateCost()}</h2>
+                <h2>Estimated Cost: ${calculateCost()}</h2>
             </div>
         </div>
     );
