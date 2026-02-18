@@ -10,3 +10,6 @@ logs/
 
 # Environment Variables
 .env
+
+# Build output
+dist/
