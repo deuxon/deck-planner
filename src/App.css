@@ -1,41 +1,126 @@
-.light-theme {
-    --background-color: white;
-    --text-color: black;
+.app {
+    min-height: 100vh;
+    background-color: var(--background-color, #f5f5f5);
+    color: var(--text-color, #333);
 }
 
-.dark-theme {
-    --background-color: black;
-    --text-color: white;
+.app.light {
+    --background-color: #f5f5f5;
+    --text-color: #333;
+    --sidebar-bg: #ffffff;
+    --header-bg: #667eea;
 }
 
-body {
-    background-color: var(--background-color);
-    color: var(--text-color);
+.app.dark {
+    --background-color: #1a1a1a;
+    --text-color: #e0e0e0;
+    --sidebar-bg: #2d2d2d;
+    --header-bg: #4a5568;
+}
+
+.app-header {
+    background: var(--header-bg);
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.app-header h1 {
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-size: 1.5rem;
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+.theme-toggle {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
 }
 
-@media (max-width: 768px) {
-    .container {
-        padding: 10px;
-    }
+.theme-toggle:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.app-container {
+    display: flex;
+    min-height: calc(100vh - 60px);
+}
+
+.sidebar {
+    width: 300px;
+    background: var(--sidebar-bg);
+    padding: 1.5rem;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+    overflow-y: auto;
+}
+
+.sidebar-section {
+    margin-bottom: 2rem;
+}
+
+.sidebar-section h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.sidebar-section h3 {
+    font-size: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.editor-section, .viewer-section {
+    margin-bottom: 2rem;
+}
+
+.editor-section h2, .viewer-section h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
 }
 
 .button {
-    background-color: var(--text-color);
-    color: var(--background-color);
-    padding: 10px 15px;
+    background: #667eea;
+    color: white;
     border: none;
-    border-radius: 5px;
+    padding: 0.6rem 1.2rem;
+    border-radius: 4px;
     cursor: pointer;
+    font-size: 0.9rem;
+    margin: 0.25rem;
+    width: calc(100% - 0.5rem);
+    text-align: left;
 }
 
 .button:hover {
-    opacity: 0.8;
+    background: #5568d3;
+}
+
+.saved-designs {
+    margin-top: 1rem;
+}
+
+.cost-calculator {
+    padding: 1rem;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 4px;
+}
+
+.cost-calculator p {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: bold;
 }
