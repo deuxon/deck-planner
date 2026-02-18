@@ -97,7 +97,24 @@ const DeckViewer3D = ({ params }) => {
     };
 
     const adjustBrightness = (hex, percent) => {
-        const num = parseInt(hex.replace('#', ''), 16);
+        // Validate and normalize hex color
+        if (!hex || typeof hex !== 'string' || !hex.startsWith('#')) {
+            return '#8B4513'; // Return default brown color
+        }
+        
+        let hexValue = hex.replace('#', '');
+        
+        // Handle 3-character hex codes by expanding them
+        if (hexValue.length === 3) {
+            hexValue = hexValue.split('').map(char => char + char).join('');
+        }
+        
+        // Validate hex format
+        if (hexValue.length !== 6 || !/^[0-9A-Fa-f]{6}$/.test(hexValue)) {
+            return '#8B4513'; // Return default brown color
+        }
+        
+        const num = parseInt(hexValue, 16);
         const r = Math.max(0, Math.min(255, (num >> 16) + percent));
         const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + percent));
         const b = Math.max(0, Math.min(255, (num & 0x0000FF) + percent));
