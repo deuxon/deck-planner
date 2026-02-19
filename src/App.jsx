@@ -8,6 +8,10 @@ export default function App() {
     const [material, setMaterial] = useState('wood');
     const [color, setColor] = useState('#8B4513');
 
+    // Constants for board dimensions
+    const BOARD_WIDTH = 0.25; // feet
+    const BOARD_SPACING = 0.5; // feet
+
     const canvasRef = useRef(null);
     const threeDivRef = useRef(null);
     const sceneRef = useRef(null);
@@ -17,6 +21,7 @@ export default function App() {
     const mouseDownRef = useRef(false);
     const mouseRef = useRef({ x: 0, y: 0 });
     const rotationRef = useRef({ x: 0.3, y: 0.5 });
+    const animationFrameRef = useRef(null);
 
     const calculateCost = () => {
         const area = width * length;
@@ -72,8 +77,8 @@ export default function App() {
         ctx.fillRect(x, y, deckWidth, deckLength);
 
         // Draw boards
-        const boardSpacing = 0.5 * scale; // 0.5 ft spacing
-        const boardWidth = 0.25 * scale; // 0.25 ft board width
+        const boardSpacing = BOARD_SPACING * scale;
+        const boardWidth = BOARD_WIDTH * scale;
         ctx.fillStyle = color;
         ctx.globalAlpha = 0.7;
         for (let i = 0; i < deckLength; i += boardSpacing + boardWidth) {
@@ -111,7 +116,7 @@ export default function App() {
         
         if (containerWidth === 0 || containerHeight === 0) return;
 
-        // Initialize scene
+        // Initialize scene (only once)
         if (!sceneRef.current) {
             const scene = new THREE.Scene();
             scene.background = new THREE.Color(0x1a1a2e);
@@ -124,8 +129,6 @@ export default function App() {
                 0.1,
                 1000
             );
-            camera.position.set(width * 1.5, height * 2, length * 1.5);
-            camera.lookAt(0, 0, 0);
             cameraRef.current = camera;
 
             // Renderer
@@ -171,6 +174,12 @@ export default function App() {
             scene.add(ground);
         }
 
+        // Update camera position based on deck dimensions
+        if (cameraRef.current) {
+            cameraRef.current.position.set(width * 1.5, height * 2, length * 1.5);
+            cameraRef.current.lookAt(0, 0, 0);
+        }
+
         // Clear existing deck
         if (deckGroupRef.current) {
             sceneRef.current.remove(deckGroupRef.current);
@@ -192,14 +201,12 @@ export default function App() {
         });
 
         // Create deck boards
-        const boardWidth = 0.25;
-        const boardSpacing = 0.5;
-        const numBoards = Math.floor(length / (boardWidth + boardSpacing));
+        const numBoards = Math.floor(length / (BOARD_WIDTH + BOARD_SPACING));
 
         for (let i = 0; i < numBoards; i++) {
-            const boardGeometry = new THREE.BoxGeometry(width, 0.1, boardWidth);
+            const boardGeometry = new THREE.BoxGeometry(width, 0.1, BOARD_WIDTH);
             const board = new THREE.Mesh(boardGeometry, deckMaterial);
-            board.position.z = (i - numBoards / 2) * (boardWidth + boardSpacing);
+            board.position.z = (i - numBoards / 2) * (BOARD_WIDTH + BOARD_SPACING);
             board.position.y = height;
             board.castShadow = true;
             board.receiveShadow = true;
@@ -230,9 +237,13 @@ export default function App() {
 
         sceneRef.current.add(deckGroup);
 
-        // Animation loop
+        // Animation loop (cancel previous if exists)
+        if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+        }
+
         const animate = () => {
-            requestAnimationFrame(animate);
+            animationFrameRef.current = requestAnimationFrame(animate);
 
             // Apply rotation
             if (deckGroupRef.current) {
@@ -288,15 +299,19 @@ export default function App() {
         };
 
         container.addEventListener('mousedown', handleMouseDown);
-        container.addEventListener('mousemove', handleMouseMove);
-        container.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
         container.addEventListener('wheel', handleWheel, { passive: false });
 
         // Cleanup
         return () => {
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+                animationFrameRef.current = null;
+            }
             container.removeEventListener('mousedown', handleMouseDown);
-            container.removeEventListener('mousemove', handleMouseMove);
-            container.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
             container.removeEventListener('wheel', handleWheel);
         };
     }, [width, length, height, color]);
