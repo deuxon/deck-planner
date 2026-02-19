@@ -176,6 +176,13 @@ export default function App() {
             scene.add(ground);
         }
 
+        // Re-attach renderer canvas if it was previously created but detached
+        if (rendererRef.current && !container.contains(rendererRef.current.domElement)) {
+            container.appendChild(rendererRef.current.domElement);
+            // Update renderer size in case container dimensions changed
+            rendererRef.current.setSize(containerWidth, containerHeight);
+        }
+
         // Update camera position based on deck dimensions
         if (cameraRef.current) {
             cameraRef.current.position.set(width * 1.5, height * 2, length * 1.5);
@@ -274,8 +281,9 @@ export default function App() {
             rotationRef.current.y += deltaX * 0.01;
             rotationRef.current.x += deltaY * 0.01;
 
-            // Limit x rotation
-            rotationRef.current.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotationRef.current.x));
+            // Limit x rotation to prevent deck from clipping through ground
+            // Keep rotation between -0.2 and 1.0 radians (approximately -11.5° to 57.3°) to keep deck above ground
+            rotationRef.current.x = Math.max(-0.2, Math.min(1.0, rotationRef.current.x));
 
             mouseRef.current = { x: e.clientX, y: e.clientY };
         };
@@ -411,18 +419,14 @@ export default function App() {
                             </button>
                         </div>
                     </div>
-                    {viewMode === '2d' && (
-                        <section style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                            <h2 style={{ marginBottom: '10px' }}>2D Plan View</h2>
-                            <canvas ref={canvasRef} style={{ border: '1px solid #ccc', borderRadius: '8px', background: '#f5f5f5', width: '100%', height: `calc(100% - ${SECTION_HEADER_HEIGHT})`, display: 'block' }} />
-                        </section>
-                    )}
-                    {viewMode === '3d' && (
-                        <section style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                            <h2 style={{ marginBottom: '10px' }}>3D Preview</h2>
-                            <div ref={threeDivRef} style={{ width: '100%', height: `calc(100% - ${SECTION_HEADER_HEIGHT})`, borderRadius: '8px', overflow: 'hidden', cursor: 'grab' }} />
-                        </section>
-                    )}
+                    <section style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: viewMode === '2d' ? 'flex' : 'none', flexDirection: 'column' }}>
+                        <h2 style={{ marginBottom: '10px' }}>2D Plan View</h2>
+                        <canvas ref={canvasRef} style={{ border: '1px solid #ccc', borderRadius: '8px', background: '#f5f5f5', width: '100%', height: `calc(100% - ${SECTION_HEADER_HEIGHT})`, display: 'block' }} />
+                    </section>
+                    <section style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: viewMode === '3d' ? 'flex' : 'none', flexDirection: 'column' }}>
+                        <h2 style={{ marginBottom: '10px' }}>3D Preview</h2>
+                        <div ref={threeDivRef} style={{ width: '100%', height: `calc(100% - ${SECTION_HEADER_HEIGHT})`, borderRadius: '8px', overflow: 'hidden', cursor: 'grab' }} />
+                    </section>
                 </main>
             </div>
         </div>
