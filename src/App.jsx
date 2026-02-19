@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import * as THREE from 'three';
 
 export default function App() {
     const [width, setWidth] = useState(12);
@@ -7,11 +8,310 @@ export default function App() {
     const [material, setMaterial] = useState('wood');
     const [color, setColor] = useState('#8B4513');
 
+    const canvasRef = useRef(null);
+    const threeDivRef = useRef(null);
+    const sceneRef = useRef(null);
+    const cameraRef = useRef(null);
+    const rendererRef = useRef(null);
+    const deckGroupRef = useRef(null);
+    const mouseDownRef = useRef(false);
+    const mouseRef = useRef({ x: 0, y: 0 });
+    const rotationRef = useRef({ x: 0.3, y: 0.5 });
+
     const calculateCost = () => {
         const area = width * length;
         const costs = { wood: 5, composite: 8, cedar: 6, redwood: 7 };
         return (area * (costs[material] || 5)).toFixed(2);
     };
+
+    // 2D Canvas Drawing
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+
+        // Clear canvas
+        ctx.fillStyle = '#f5f5f5';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw grid
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 0.5;
+        const gridSize = 30;
+        for (let i = 0; i < canvas.width; i += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i, canvas.height);
+            ctx.stroke();
+        }
+        for (let i = 0; i < canvas.height; i += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(0, i);
+            ctx.lineTo(canvas.width, i);
+            ctx.stroke();
+        }
+
+        // Draw deck plan
+        const scale = Math.min(canvas.width / (width + 4), canvas.height / (length + 4));
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const deckWidth = width * scale;
+        const deckLength = length * scale;
+        const x = centerX - deckWidth / 2;
+        const y = centerY - deckLength / 2;
+
+        // Deck outline
+        ctx.strokeStyle = '#667eea';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x, y, deckWidth, deckLength);
+        ctx.fillStyle = 'rgba(102, 126, 234, 0.1)';
+        ctx.fillRect(x, y, deckWidth, deckLength);
+
+        // Draw boards
+        const boardSpacing = 0.5 * scale; // 0.5 ft spacing
+        const boardWidth = 0.25 * scale; // 0.25 ft board width
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.7;
+        for (let i = 0; i < deckLength; i += boardSpacing + boardWidth) {
+            ctx.fillRect(x, y + i, deckWidth, boardWidth);
+        }
+        ctx.globalAlpha = 1.0;
+
+        // Draw center point
+        ctx.fillStyle = '#764ba2';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw dimensions
+        ctx.fillStyle = '#333';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${width}ft`, centerX, y - 15);
+
+        ctx.save();
+        ctx.translate(x - 30, centerY);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText(`${length}ft`, 0, 0);
+        ctx.restore();
+    }, [width, length, color]);
+
+    // 3D Scene Setup and Rendering
+    useEffect(() => {
+        const container = threeDivRef.current;
+        if (!container) return;
+
+        // Wait for container to have dimensions
+        const containerWidth = container.clientWidth || 400;
+        const containerHeight = container.clientHeight || 400;
+        
+        if (containerWidth === 0 || containerHeight === 0) return;
+
+        // Initialize scene
+        if (!sceneRef.current) {
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            sceneRef.current = scene;
+
+            // Camera
+            const camera = new THREE.PerspectiveCamera(
+                50,
+                containerWidth / containerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(width * 1.5, height * 2, length * 1.5);
+            camera.lookAt(0, 0, 0);
+            cameraRef.current = camera;
+
+            // Renderer
+            try {
+                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(containerWidth, containerHeight);
+                renderer.shadowMap.enabled = true;
+                container.appendChild(renderer.domElement);
+                rendererRef.current = renderer;
+            } catch (error) {
+                console.error('WebGL not supported:', error);
+                // Create fallback message
+                const fallbackDiv = document.createElement('div');
+                fallbackDiv.style.cssText = 'display: flex; align-items: center; justify-content: center; height: 100%; color: white; font-size: 16px;';
+                fallbackDiv.textContent = '3D Preview (WebGL required)';
+                container.appendChild(fallbackDiv);
+                return;
+            }
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            const pointLight = new THREE.PointLight(0xffffff, 0.4);
+            pointLight.position.set(-10, 10, -10);
+            scene.add(pointLight);
+
+            // Ground plane
+            const groundGeometry = new THREE.PlaneGeometry(100, 100);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x2d3748,
+                roughness: 0.8 
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -0.1;
+            ground.receiveShadow = true;
+            scene.add(ground);
+        }
+
+        // Clear existing deck
+        if (deckGroupRef.current) {
+            sceneRef.current.remove(deckGroupRef.current);
+            deckGroupRef.current.traverse((child) => {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) child.material.dispose();
+            });
+        }
+
+        // Create deck group
+        const deckGroup = new THREE.Group();
+        deckGroupRef.current = deckGroup;
+
+        // Deck material
+        const deckMaterial = new THREE.MeshStandardMaterial({
+            color: new THREE.Color(color),
+            roughness: 0.7,
+            metalness: 0.1
+        });
+
+        // Create deck boards
+        const boardWidth = 0.25;
+        const boardSpacing = 0.5;
+        const numBoards = Math.floor(length / (boardWidth + boardSpacing));
+
+        for (let i = 0; i < numBoards; i++) {
+            const boardGeometry = new THREE.BoxGeometry(width, 0.1, boardWidth);
+            const board = new THREE.Mesh(boardGeometry, deckMaterial);
+            board.position.z = (i - numBoards / 2) * (boardWidth + boardSpacing);
+            board.position.y = height;
+            board.castShadow = true;
+            board.receiveShadow = true;
+            deckGroup.add(board);
+        }
+
+        // Create support posts at corners
+        const postMaterial = new THREE.MeshStandardMaterial({
+            color: 0x8B4513,
+            roughness: 0.9
+        });
+
+        const postPositions = [
+            [-width / 2 + 0.5, -length / 2 + 0.5],
+            [width / 2 - 0.5, -length / 2 + 0.5],
+            [-width / 2 + 0.5, length / 2 - 0.5],
+            [width / 2 - 0.5, length / 2 - 0.5]
+        ];
+
+        postPositions.forEach(([x, z]) => {
+            const postGeometry = new THREE.BoxGeometry(0.3, height, 0.3);
+            const post = new THREE.Mesh(postGeometry, postMaterial);
+            post.position.set(x, height / 2, z);
+            post.castShadow = true;
+            post.receiveShadow = true;
+            deckGroup.add(post);
+        });
+
+        sceneRef.current.add(deckGroup);
+
+        // Animation loop
+        const animate = () => {
+            requestAnimationFrame(animate);
+
+            // Apply rotation
+            if (deckGroupRef.current) {
+                deckGroupRef.current.rotation.x = rotationRef.current.x;
+                deckGroupRef.current.rotation.y = rotationRef.current.y;
+            }
+
+            if (rendererRef.current && sceneRef.current && cameraRef.current) {
+                rendererRef.current.render(sceneRef.current, cameraRef.current);
+            }
+        };
+        animate();
+
+        // Mouse controls
+        const handleMouseDown = (e) => {
+            mouseDownRef.current = true;
+            mouseRef.current = { x: e.clientX, y: e.clientY };
+        };
+
+        const handleMouseMove = (e) => {
+            if (!mouseDownRef.current) return;
+
+            const deltaX = e.clientX - mouseRef.current.x;
+            const deltaY = e.clientY - mouseRef.current.y;
+
+            rotationRef.current.y += deltaX * 0.01;
+            rotationRef.current.x += deltaY * 0.01;
+
+            // Limit x rotation
+            rotationRef.current.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotationRef.current.x));
+
+            mouseRef.current = { x: e.clientX, y: e.clientY };
+        };
+
+        const handleMouseUp = () => {
+            mouseDownRef.current = false;
+        };
+
+        const handleWheel = (e) => {
+            e.preventDefault();
+            const camera = cameraRef.current;
+            if (!camera) return;
+
+            const zoomSpeed = 0.1;
+            const delta = e.deltaY > 0 ? 1 : -1;
+            
+            camera.position.multiplyScalar(1 + delta * zoomSpeed);
+            
+            // Limit zoom
+            const distance = camera.position.length();
+            if (distance < 5) camera.position.normalize().multiplyScalar(5);
+            if (distance > 100) camera.position.normalize().multiplyScalar(100);
+        };
+
+        container.addEventListener('mousedown', handleMouseDown);
+        container.addEventListener('mousemove', handleMouseMove);
+        container.addEventListener('mouseup', handleMouseUp);
+        container.addEventListener('wheel', handleWheel, { passive: false });
+
+        // Cleanup
+        return () => {
+            container.removeEventListener('mousedown', handleMouseDown);
+            container.removeEventListener('mousemove', handleMouseMove);
+            container.removeEventListener('mouseup', handleMouseUp);
+            container.removeEventListener('wheel', handleWheel);
+        };
+    }, [width, length, height, color]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (rendererRef.current) {
+                rendererRef.current.dispose();
+                if (threeDivRef.current && rendererRef.current.domElement) {
+                    threeDivRef.current.removeChild(rendererRef.current.domElement);
+                }
+            }
+        };
+    }, []);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'system-ui' }}>
@@ -55,11 +355,11 @@ export default function App() {
                 <main style={{ flex: 1, display: 'flex', gap: '15px', padding: '20px', overflow: 'hidden' }}>
                     <section style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                         <h2 style={{ marginBottom: '10px' }}>2D Plan View</h2>
-                        <canvas width={500} height={400} style={{ border: '1px solid #ccc', borderRadius: '8px', background: '#f5f5f5' }} />
+                        <canvas ref={canvasRef} style={{ border: '1px solid #ccc', borderRadius: '8px', background: '#f5f5f5', width: '100%', height: '400px', display: 'block' }} />
                     </section>
                     <section style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                         <h2 style={{ marginBottom: '10px' }}>3D Preview</h2>
-                        <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '18px', fontWeight: 'bold' }}>🎬 3D Deck Viewer</div>
+                        <div ref={threeDivRef} style={{ width: '100%', height: '400px', borderRadius: '8px', overflow: 'hidden', cursor: 'grab' }} />
                     </section>
                 </main>
             </div>
