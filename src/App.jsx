@@ -282,7 +282,7 @@ export default function App() {
             rotationRef.current.x += deltaY * 0.01;
 
             // Limit x rotation to prevent deck from clipping through ground
-            // Keep rotation between -0.2 and 1.0 (roughly 0 to 60 degrees) to keep deck above ground
+            // Keep rotation between -0.2 and 1.0 radians (approximately -11.5° to 57.3°) to keep deck above ground
             rotationRef.current.x = Math.max(-0.2, Math.min(1.0, rotationRef.current.x));
 
             mouseRef.current = { x: e.clientX, y: e.clientY };
