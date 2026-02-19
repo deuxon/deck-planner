@@ -7,6 +7,7 @@ export default function App() {
     const [height, setHeight] = useState(3);
     const [material, setMaterial] = useState('wood');
     const [color, setColor] = useState('#8B4513');
+    const [viewMode, setViewMode] = useState('3d');
 
     // Constants for board dimensions
     const BOARD_WIDTH = 0.25; // feet
@@ -32,7 +33,7 @@ export default function App() {
     // 2D Canvas Drawing
     useEffect(() => {
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!canvas || viewMode !== '2d') return;
 
         const ctx = canvas.getContext('2d');
         const rect = canvas.getBoundingClientRect();
@@ -103,12 +104,12 @@ export default function App() {
         ctx.rotate(-Math.PI / 2);
         ctx.fillText(`${length}ft`, 0, 0);
         ctx.restore();
-    }, [width, length, color]);
+    }, [width, length, color, viewMode]);
 
     // 3D Scene Setup and Rendering
     useEffect(() => {
         const container = threeDivRef.current;
-        if (!container) return;
+        if (!container || viewMode !== '3d') return;
 
         // Wait for container to have dimensions
         const containerWidth = container.clientWidth || 400;
@@ -314,7 +315,7 @@ export default function App() {
             document.removeEventListener('mouseup', handleMouseUp);
             container.removeEventListener('wheel', handleWheel);
         };
-    }, [width, length, height, color]);
+    }, [width, length, height, color, viewMode]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -367,15 +368,60 @@ export default function App() {
                         <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#667eea' }}>${calculateCost()}</p>
                     </div>
                 </aside>
-                <main style={{ flex: 1, display: 'flex', gap: '15px', padding: '20px', overflow: 'hidden' }}>
-                    <section style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                        <h2 style={{ marginBottom: '10px' }}>2D Plan View</h2>
-                        <canvas ref={canvasRef} style={{ border: '1px solid #ccc', borderRadius: '8px', background: '#f5f5f5', width: '100%', height: '400px', display: 'block' }} />
-                    </section>
-                    <section style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                        <h2 style={{ marginBottom: '10px' }}>3D Preview</h2>
-                        <div ref={threeDivRef} style={{ width: '100%', height: '400px', borderRadius: '8px', overflow: 'hidden', cursor: 'grab' }} />
-                    </section>
+                <main style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px', overflow: 'hidden' }}>
+                    <div style={{ marginBottom: '15px', display: 'flex', justifyContent: 'center' }}>
+                        <div style={{ 
+                            display: 'inline-flex', 
+                            borderRadius: '8px', 
+                            overflow: 'hidden',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                            border: '2px solid #667eea'
+                        }}>
+                            <button 
+                                onClick={() => setViewMode('3d')}
+                                style={{ 
+                                    background: viewMode === '3d' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'white',
+                                    color: viewMode === '3d' ? 'white' : '#667eea',
+                                    border: 'none',
+                                    padding: '10px 24px',
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease',
+                                    borderRight: '1px solid #667eea'
+                                }}
+                            >
+                                🎨 3D View
+                            </button>
+                            <button 
+                                onClick={() => setViewMode('2d')}
+                                style={{ 
+                                    background: viewMode === '2d' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'white',
+                                    color: viewMode === '2d' ? 'white' : '#667eea',
+                                    border: 'none',
+                                    padding: '10px 24px',
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                📐 2D View
+                            </button>
+                        </div>
+                    </div>
+                    {viewMode === '2d' && (
+                        <section style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                            <h2 style={{ marginBottom: '10px' }}>2D Plan View</h2>
+                            <canvas ref={canvasRef} style={{ border: '1px solid #ccc', borderRadius: '8px', background: '#f5f5f5', width: '100%', height: 'calc(100% - 40px)', display: 'block' }} />
+                        </section>
+                    )}
+                    {viewMode === '3d' && (
+                        <section style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                            <h2 style={{ marginBottom: '10px' }}>3D Preview</h2>
+                            <div ref={threeDivRef} style={{ width: '100%', height: 'calc(100% - 40px)', borderRadius: '8px', overflow: 'hidden', cursor: 'grab' }} />
+                        </section>
+                    )}
                 </main>
             </div>
         </div>
