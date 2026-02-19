@@ -12,6 +12,7 @@ export default function App() {
     // Constants for board dimensions
     const BOARD_WIDTH = 0.25; // feet
     const BOARD_SPACING = 0.5; // feet
+    const SECTION_HEADER_HEIGHT = '40px'; // Height reserved for section headers
 
     const canvasRef = useRef(null);
     const threeDivRef = useRef(null);
@@ -413,13 +414,13 @@ export default function App() {
                     {viewMode === '2d' && (
                         <section style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                             <h2 style={{ marginBottom: '10px' }}>2D Plan View</h2>
-                            <canvas ref={canvasRef} style={{ border: '1px solid #ccc', borderRadius: '8px', background: '#f5f5f5', width: '100%', height: 'calc(100% - 40px)', display: 'block' }} />
+                            <canvas ref={canvasRef} style={{ border: '1px solid #ccc', borderRadius: '8px', background: '#f5f5f5', width: '100%', height: `calc(100% - ${SECTION_HEADER_HEIGHT})`, display: 'block' }} />
                         </section>
                     )}
                     {viewMode === '3d' && (
                         <section style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                             <h2 style={{ marginBottom: '10px' }}>3D Preview</h2>
-                            <div ref={threeDivRef} style={{ width: '100%', height: 'calc(100% - 40px)', borderRadius: '8px', overflow: 'hidden', cursor: 'grab' }} />
+                            <div ref={threeDivRef} style={{ width: '100%', height: `calc(100% - ${SECTION_HEADER_HEIGHT})`, borderRadius: '8px', overflow: 'hidden', cursor: 'grab' }} />
                         </section>
                     )}
                 </main>
